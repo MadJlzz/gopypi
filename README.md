@@ -1,3 +1,6 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/MadJlzz/gopypi)](https://goreportcard.com/report/github.com/MadJlzz/gopypi)
+[![Release](https://img.shields.io/github/release/MadJlzz/gopypi.svg?style=flat-square)](https://github.com/MadJlzz/gopypi/releases/latest)
+
 # gopypi
 
 gopypi is an implementation of the [PEP 503](https://www.python.org/dev/peps/pep-0503/) also known
