@@ -2,8 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
     <body>
-        <a href="/frob/">frob</a>
-        <a href="/spamspamspam/">spamspamspam</a>
+        {{ range . }}<a href="{{.NormalizeURI}}">{{.Name}}</a>{{ end }}
     </body>
 </html>
 {{ end }}
