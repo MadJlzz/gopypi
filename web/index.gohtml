@@ -2,7 +2,12 @@
 <!DOCTYPE html>
 <html lang="en">
     <body>
-        {{ range . }}<a href="{{.NormalizeURI}}">{{.Name}}</a>{{ end }}
+        <h1>PACKAGE INDEX</h1>
+        {{ range $value := . }}
+            <p>
+                <a href="/simple/{{.NormalizeName}}/">{{.Name}}</a>
+            </p>
+        {{ end }}
     </body>
 </html>
 {{ end }}

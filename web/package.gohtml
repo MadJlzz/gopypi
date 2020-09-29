@@ -1,0 +1,13 @@
+{{ define "package" -}}
+<!DOCTYPE html>
+<html lang="en">
+    <body>
+        <h1>{{ .Name }}</h1>
+        {{ range .URI }}
+            <p>
+                <a href="{{ .String | safe }}">{{ .Path }}</a>
+            </p>
+        {{ end }}
+    </body>
+</html>
+{{ end }}

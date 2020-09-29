@@ -1,23 +1,38 @@
 package template
 
 import (
-	"github.com/MadJlzz/gopypi/internal/pkg/web"
+	"github.com/MadJlzz/gopypi/internal/pkg/utils"
 	"html/template"
 	"io"
+	"path/filepath"
 )
 
-var t = template.New("index")
+var indexPath = filepath.Join(utils.BasePath(), "web", "index.gohtml")
 
-// Generate writes the output of a template into a io.Writer.
-//
-// If an error occurs during template parsing or execution, it will return an error.
-// Otherwise, this function will return nil.
-func Generate(w io.Writer, filepath string, pkgs []*web.Package) error {
-	tmpl, err := t.ParseFiles(filepath)
-	if err != nil {
-		return err
+type SimpleRepositoryTemplate struct {
+	tmpl *template.Template
+}
+
+func New() *SimpleRepositoryTemplate {
+	funcMap := template.FuncMap{
+		"safe": func(s string) template.HTMLAttr {
+			return template.HTMLAttr(s)
+		},
 	}
-	if err = tmpl.ExecuteTemplate(w, "index", pkgs); err != nil {
+	tmpl := template.Must(template.New("root").Funcs(funcMap).ParseGlob(utils.BasePath() + "/*/*.gohtml"))
+	//tmpl, err := template.New("index").ParseFiles(indexPath)
+	//if err != nil {
+	//	return nil, err
+	//}
+	return &SimpleRepositoryTemplate{tmpl: tmpl}
+}
+
+// Execute writes the output of a template into a io.Writer.
+//
+// If an error occurs during execution, it will return an error.
+// Otherwise, this function will return nil.
+func (srt *SimpleRepositoryTemplate) Execute(w io.Writer, templateName string, data interface{}) error {
+	if err := srt.tmpl.ExecuteTemplate(w, templateName, data); err != nil {
 		return err
 	}
 	return nil
