@@ -4,7 +4,6 @@ import (
 	"cloud.google.com/go/storage"
 	"context"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"io/ioutil"
@@ -47,10 +46,6 @@ func (gcs *googleCloudStorage) Open(name string) (http.File, error) {
 		}
 		names = append(names, attrs.Name)
 	}
-
-	fs := afero.NewMemMapFs()
-	fs.Create()
-
 	f := &os.File{}
 	for _, name := range names {
 		rc, err := bh.Object(name).NewReader(context.TODO())
