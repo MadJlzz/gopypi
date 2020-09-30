@@ -5,7 +5,7 @@
         <h1>{{ .Name }}</h1>
         {{ range .URI }}
             <p>
-                <a href="{{ .String | safe }}">{{ .Path }}</a>
+                <a href="{{ .String }}">{{ .Path }}</a>
             </p>
         {{ end }}
     </body>
