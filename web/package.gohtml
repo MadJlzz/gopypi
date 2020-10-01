@@ -3,9 +3,9 @@
 <html lang="en">
     <body>
         <h1>{{ .Name }}</h1>
-        {{ range .URI }}
+        {{ range .PackageFiles }}
             <p>
-                <a href="{{ .String }}">{{ .Path }}</a>
+                <a href="{{ .URL.String }}">{{ .Name }}</a>
             </p>
         {{ end }}
     </body>
