@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"github.com/MadJlzz/gopypi/internal/pkg/backend"
+	"github.com/MadJlzz/gopypi/internal/pkg/template"
+	"github.com/MadJlzz/gopypi/internal/pkg/web"
 	"github.com/gorilla/mux"
 	"google.golang.org/api/option"
 	"log"
@@ -15,21 +17,17 @@ var credentials = flag.String("credentials", "credentials/service-account-dev.js
 var packageLocation = flag.String("package-location", "C:/DefaultStorage", "Location from which we should load packages.")
 
 func main() {
-	//tmpl := template.New()
-	//ls := backend.NewLocalStorage(*packageLocation)
+	tmpl := template.New()
 	gcs := backend.NewGoogleCloudStorage(*packageLocation,"gopypi-nextgatetech-dev", option.WithCredentialsFile(*credentials))
-	//ctrl := web.New(ls, tmpl)
+	ctrl := web.New(gcs, tmpl)
 
 	r := mux.NewRouter()
-	//r.HandleFunc("/", ctrl.Index)
-	//r.HandleFunc("/simple/{name}/", ctrl.Package)
-
-	r.PathPrefix("/simple/").Handler(http.StripPrefix("/simple/", http.FileServer(http.Dir(*packageLocation))))
+	r.HandleFunc("/simple/", ctrl.Index)
+	r.HandleFunc("/simple/{name}/", ctrl.Package)
 
 	srv := &http.Server{
 		Handler:      r,
 		Addr:         "127.0.0.1:3000",
-		// Good practice: enforce timeouts for servers you create!
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
