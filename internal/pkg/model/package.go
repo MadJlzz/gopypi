@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"net/url"
 	"regexp"
 	"strings"
 )
@@ -10,8 +9,8 @@ import (
 var normalizeRegexp = regexp.MustCompile("[-_.]+")
 
 type PackageFile struct {
-	Name string
-	URL  *url.URL
+	Name      string
+	SignedURL string
 }
 
 type Package struct {

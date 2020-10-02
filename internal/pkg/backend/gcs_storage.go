@@ -5,28 +5,45 @@ import (
 	"context"
 	"github.com/MadJlzz/gopypi/internal/pkg/model"
 	"github.com/MadJlzz/gopypi/internal/pkg/utils"
-	"github.com/sirupsen/logrus"
+	"golang.org/x/oauth2/google"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
-	"net/url"
+	"io/ioutil"
 	"path/filepath"
+	"time"
 )
 
 type GoogleCloudStorage struct {
-	localDir string
-	bucket   string
-	client   *storage.Client
+	localDir         string
+	bucket           string
+	client           *storage.Client
+	signedUrlOptions *storage.SignedURLOptions
 }
 
-func NewGoogleCloudStorage(localDir, bucket string, opts ...option.ClientOption) *GoogleCloudStorage {
-	c, err := storage.NewClient(context.Background(), opts...)
+func NewGoogleCloudStorage(localDir, bucket, credentials string) *GoogleCloudStorage {
+	c, err := storage.NewClient(context.Background(), option.WithCredentialsFile(credentials))
 	if err != nil {
-		logrus.Fatalf("could not create google cloud storage client.\ngot: [%v]", err)
+		utils.Logger.Fatalf("could not create google cloud storage client.\ngot: [%v]", err)
+	}
+	jsonConfig, err := ioutil.ReadFile(credentials)
+	if err != nil {
+		utils.Logger.Fatalf("could not read service account file [%s].\ngot: [%v]", credentials, err)
+	}
+	conf, err := google.JWTConfigFromJSON(jsonConfig)
+	if err != nil {
+		utils.Logger.Fatalf("could not parse service account file [%s].\ngot: [%v]", credentials, err)
 	}
 	return &GoogleCloudStorage{
 		localDir: localDir,
-		bucket: bucket,
-		client: c,
+		bucket:   bucket,
+		client:   c,
+		signedUrlOptions: &storage.SignedURLOptions{
+			Scheme:         storage.SigningSchemeV4,
+			Method:         "GET",
+			GoogleAccessID: conf.Email,
+			PrivateKey:     conf.PrivateKey,
+			Expires:        time.Now().Add(1 * time.Minute),
+		},
 	}
 }
 
@@ -44,14 +61,15 @@ func (gcs *GoogleCloudStorage) Load() map[string]*model.Package {
 			utils.Logger.Warnf("could not read objects from bucket [%s].\ngot: [%v]", gcs.bucket, err)
 		}
 
-		u, err := url.Parse(attrs.MediaLink)
+		// Generate the signed URL for authorizing download by whoever has the link.
+		u, err := storage.SignedURL(gcs.bucket, attrs.Name, gcs.signedUrlOptions)
 		if err != nil {
-			utils.Logger.Warnf("could not parse object [%s] download url [%s].\ngot: [%v]", attrs.Name, attrs.MediaLink, err)
+			utils.Logger.Warnf("impossible to generate signed url for object [%s]. Skipping...\ngot:[%v]")
 		}
 
 		pf := &model.PackageFile{
 			Name: filepath.Base(attrs.Name),
-			URL:  u,
+			SignedURL:  u,
 		}
 
 		key := filepath.Dir(attrs.Name)
@@ -63,33 +81,6 @@ func (gcs *GoogleCloudStorage) Load() map[string]*model.Package {
 	}
 	return pkgs
 }
-
-//func (gcs *GoogleCloudStorage) Open(name string) (http.File, error) {
-	//f := &os.File{}
-	//for _, name := range names {
-	//	rc, err := bh.Object(name).NewReader(context.TODO())
-	//	if err != nil {
-	//		logrus.Warnln(err)
-	//	}
-	//
-	//	data, err := ioutil.ReadAll(rc)
-	//	if err != nil {
-	//		logrus.Warnln(err)
-	//	}
-	//	logrus.Println(data)
-	//	_ = rc.Close()
-	//}
-	//resp, _ := http.Get("https://google.com")
-	//defer resp.Body.Close()
-
-	//body, _ := ioutil.ReadAll(resp.Body)
-
-	// To open a file, you have first to be authenticated to Google Cloud
-	// Also we retrieve a file with http.Get
-	// If there is an error, we treat it
-	// Otherwise we return the file
-	//return f, nil
-//}
 
 func (gcs *GoogleCloudStorage) Close() error {
 	return gcs.client.Close()

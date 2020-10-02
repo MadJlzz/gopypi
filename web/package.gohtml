@@ -5,7 +5,7 @@
         <h1>{{ .Name }}</h1>
         {{ range .PackageFiles }}
             <p>
-                <a href="{{ .URL.String }}">{{ .Name }}</a>
+                <a href="{{ .SignedURL }}">{{ .Name }}</a>
             </p>
         {{ end }}
     </body>
