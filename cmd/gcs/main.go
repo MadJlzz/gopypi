@@ -6,7 +6,6 @@ import (
 	"github.com/MadJlzz/gopypi/internal/pkg/template"
 	"github.com/MadJlzz/gopypi/internal/pkg/web"
 	"github.com/gorilla/mux"
-	"google.golang.org/api/option"
 	"log"
 	"net/http"
 	"time"
@@ -18,7 +17,7 @@ var packageLocation = flag.String("package-location", "C:/DefaultStorage", "Loca
 
 func main() {
 	tmpl := template.New()
-	gcs := backend.NewGoogleCloudStorage(*packageLocation,"gopypi-nextgatetech-dev", option.WithCredentialsFile(*credentials))
+	gcs := backend.NewGoogleCloudStorage(*packageLocation,"gopypi-nextgatetech-dev", *credentials)
 	ctrl := web.New(gcs, tmpl)
 
 	r := mux.NewRouter()
