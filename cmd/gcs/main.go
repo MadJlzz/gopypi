@@ -4,20 +4,24 @@ import (
 	"flag"
 	"github.com/MadJlzz/gopypi/internal/pkg/backend"
 	"github.com/MadJlzz/gopypi/internal/pkg/template"
+	_ "github.com/MadJlzz/gopypi/internal/pkg/utils"
 	"github.com/MadJlzz/gopypi/internal/pkg/web"
 	"github.com/gorilla/mux"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"time"
 )
 
-var credentials = flag.String("credentials", "credentials/service-account-dev.json", "GCP JSON credentials file.")
-
-var packageLocation = flag.String("package-location", "C:/DefaultStorage", "Location from which we should load packages.")
-
 func main() {
+	var (
+		bucket      = flag.String("bucket", "gopypi-nextgatetech-dev", "GCS Bucket name to use.")
+		credentials = flag.String("credentials", "credentials/service-account-dev.json", "GCP JSON credentials file.")
+		port        = flag.String("port", "3000", "Port of the web server.")
+	)
+	flag.Parse()
+
 	tmpl := template.New()
-	gcs := backend.NewGoogleCloudStorage(*packageLocation,"gopypi-nextgatetech-dev", *credentials)
+	gcs := backend.NewGoogleCloudStorage(*bucket, *credentials)
 	ctrl := web.New(gcs, tmpl)
 
 	r := mux.NewRouter()
@@ -26,12 +30,15 @@ func main() {
 
 	srv := &http.Server{
 		Handler:      r,
-		Addr:         "127.0.0.1:3000",
+		Addr:         "127.0.0.1:" + *port,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
+
+	log.Infof("Auto-indexing packages from [%s] on port [%s]...\n", *bucket, *port)
+	log.Infoln("Press CTRL+C to kill server...")
 	if err := srv.ListenAndServe(); err != nil {
-		_= gcs.Close()
+		_ = gcs.Close()
 		log.Fatal(err)
 	}
 }

@@ -4,7 +4,7 @@ import (
 	"github.com/MadJlzz/gopypi/internal/pkg/backend"
 	"github.com/MadJlzz/gopypi/internal/pkg/template"
 	"github.com/gorilla/mux"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 )
 
@@ -23,7 +23,7 @@ func New(gcs *backend.GoogleCloudStorage, tmpl *template.SimpleRepositoryTemplat
 func (c *Controller) Index(w http.ResponseWriter, r *http.Request) {
 	pkgs := c.storage.Load()
 	if err := c.template.Execute(w, "index", pkgs); err != nil {
-		logrus.Errorf("could not execute template [index]. [%v]\n", err)
+		log.Errorf("could not execute template [index]. [%v]\n", err)
 		//Some fancy HTTP error code that is user friendly
 	}
 }
@@ -31,19 +31,19 @@ func (c *Controller) Index(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) Package(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if _, found := vars["name"]; !found {
-		logrus.Errorln("routing variable [name] wasn't provided")
+		log.Errorln("routing variable [name] wasn't provided")
 		//Some fancy HTTP error code
 	}
 	// TODO: put in place a cache instead of loading everytime from the source.
 	pkgs := c.storage.Load()
 	pkg, found := pkgs[vars["name"]]
 	if !found {
-		logrus.Errorln("package [%s] is not available anymore...", vars["name"])
+		log.Errorln("package [%s] is not available anymore...", vars["name"])
 		//Some fancy HTTP error code
 	}
 	//pkg.Files[0] = "C:/DefaultStorage/example-pkg/example-pkg-0.0.1.tar.gz"
 	if err := c.template.Execute(w, "package", pkg); err != nil {
-		logrus.Errorf("could not execute template [package]. [%v]\n", err)
+		log.Errorf("could not execute template [package]. [%v]\n", err)
 		//Some fancy HTTP error code that is user friendly
 	}
 }

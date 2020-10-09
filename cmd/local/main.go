@@ -2,23 +2,24 @@ package main
 
 import (
 	"flag"
-	"github.com/MadJlzz/gopypi/internal/pkg/utils"
+	_ "github.com/MadJlzz/gopypi/internal/pkg/utils"
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"time"
 )
 
-const PypiBaseUrl = "/simple/"
-
-var port = flag.String("port", "3000", "Port of the app")
-
-var packageLocation = flag.String("package-location", "C:/DefaultStorage", "Location from which we should load packages.")
-
 func main() {
+	const PypiBaseUrl = "/simple/"
+	var (
+		port            = flag.String("port", "3000", "Port of the app")
+		packageLocation = flag.String("package-location", "C:/DefaultStorage", "Location from which we should load packages.")
+	)
+	flag.Parse()
 
 	if _, err := os.Stat(*packageLocation); os.IsNotExist(err) {
-		utils.Logger.Fatalf("directory [%s] doesn't exist.\ngot: [%v]", *packageLocation, err)
+		log.Fatalf("directory [%s] doesn't exist.\ngot: [%v]", *packageLocation, err)
 	}
 
 	r := mux.NewRouter()
@@ -38,6 +39,6 @@ func main() {
 		ReadTimeout:  15 * time.Second,
 	}
 
-	utils.Logger.Infof("Static file server scanning directory [\"%s\"] started on port [%s]...\n", *packageLocation, *port)
-	utils.Logger.Fatal(srv.ListenAndServe())
+	log.Infof("Static file server scanning directory [\"%s\"] started on port [%s]...\n", *packageLocation, *port)
+	log.Fatal(srv.ListenAndServe())
 }
