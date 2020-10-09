@@ -6,6 +6,10 @@ import (
 	"runtime"
 )
 
+// init is configuring the project logrus.Logger
+//
+// Configuration changes if we have set GOPYPI_ENV="PRODUCTION"
+// which means we have deployed gopypi for production use.
 func init() {
 	f := &logrus.TextFormatter{
 		DisableColors:   false,
