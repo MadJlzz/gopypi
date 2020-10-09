@@ -38,7 +38,7 @@ func (c *Controller) Package(w http.ResponseWriter, r *http.Request) {
 	pkgs := c.storage.Load()
 	pkg, found := pkgs[vars["name"]]
 	if !found {
-		log.Errorln("package [%s] is not available anymore...", vars["name"])
+		log.Errorf("package [%s] is not available anymore...\n", vars["name"])
 		//Some fancy HTTP error code
 	}
 	//pkg.Files[0] = "C:/DefaultStorage/example-pkg/example-pkg-0.0.1.tar.gz"
