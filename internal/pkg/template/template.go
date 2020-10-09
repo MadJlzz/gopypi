@@ -6,10 +6,15 @@ import (
 	"io"
 )
 
+// SimpleRepositoryTemplate stores any templates we use for
+// generating the auto-index page.
+//
+// Should be instantiated using New.
 type SimpleRepositoryTemplate struct {
 	tmpl *template.Template
 }
 
+// New is the simplest way to get started with a SimpleRepositoryTemplate.
 func New() *SimpleRepositoryTemplate {
 	tmpl := template.Must(template.ParseGlob(utils.BasePath() + "/*/*.gohtml"))
 	return &SimpleRepositoryTemplate{tmpl: tmpl}
