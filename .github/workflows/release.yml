@@ -2,8 +2,7 @@ name: Generate release-artifacts
 
 on:
   release:
-    types:
-      - created
+    types: [created]
 
 jobs:
 
