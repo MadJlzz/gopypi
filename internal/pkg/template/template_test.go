@@ -1,4 +1,5 @@
 package template
+
 //
 //import (
 //	"github.com/MadJlzz/gopypi/internal/pkg/model"
