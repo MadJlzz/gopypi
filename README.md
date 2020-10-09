@@ -15,7 +15,7 @@ go get github.com/MadJlzz/gopypi
 
 Now simply install it: 
 ```bash
-go install
+go install -o gopypi-gcs cmd/gcs/main.go
 ```
 
 ## Usage
@@ -59,6 +59,18 @@ pip install --extra-index-url https://<gopypi server>/simple/ <private_package>
 
 :warning: **If you're package has the same name with one in pypi.org**: Order your
 indexes in a pip configuration file to search first in your private registry. 
+
+## Next steps
+
+OAuth 2.0 is not yet implemented. For the moment, only `service account`
+authentication is possible.
+
+:exclamation: For the moment, `gopypi` is serving only `HTTP`. It means 
+that a man in the middle can intercept your private libraries. 
+
+:information_source: If you deploy the web server with e.g. App Engine
+deploying with HTTP is fine because Google manage the HTTP(s) exposition
+for you.
 
 ## Contributing
 
