@@ -13,12 +13,19 @@ import (
 	"time"
 )
 
+// GoogleCloudStorage is a wrapper of a GCS client.
+// It contains a storage.SignedURLOptions for defining signed url options.
+//
+// Should be instantiated using NewGoogleCloudStorage.
 type GoogleCloudStorage struct {
 	bucket           string
 	client           *storage.Client
 	signedUrlOptions *storage.SignedURLOptions
 }
 
+// NewGoogleCloudStorage is the simplest way to get started with a GoogleCloudStorage.
+//
+// The application will crash if authentication to Google fails.
 func NewGoogleCloudStorage(bucket, credentials string) *GoogleCloudStorage {
 	c, err := storage.NewClient(context.Background(), option.WithCredentialsFile(credentials))
 	if err != nil {
@@ -45,6 +52,10 @@ func NewGoogleCloudStorage(bucket, credentials string) *GoogleCloudStorage {
 	}
 }
 
+// Load packages from GCS, create storage.SignedURL per file
+// and store them into a in-memory map.
+//
+// This map will be used for generating index.html from template.
 func (gcs *GoogleCloudStorage) Load() map[string]*model.Package {
 	pkgs := make(map[string]*model.Package)
 
@@ -77,6 +88,7 @@ func (gcs *GoogleCloudStorage) Load() map[string]*model.Package {
 	return pkgs
 }
 
+// Close the connection from Google storage.Client.
 func (gcs *GoogleCloudStorage) Close() error {
 	return gcs.client.Close()
 }
