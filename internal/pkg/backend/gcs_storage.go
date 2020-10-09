@@ -62,7 +62,7 @@ func (gcs *GoogleCloudStorage) Load() map[string]*model.Package {
 		// Generate the signed URL for authorizing download by whoever has the link.
 		u, err := storage.SignedURL(gcs.bucket, attrs.Name, gcs.signedUrlOptions)
 		if err != nil {
-			log.Warnf("impossible to generate signed url for object [%s]. Skipping...\ngot:[%v]")
+			log.Warnf("impossible to generate signed url for object [%s]. Skipping...\ngot:[%v]", attrs.Name, err)
 		}
 
 		pf := &model.PackageFile{
