@@ -65,16 +65,13 @@ func (gcs *GoogleCloudStorage) Load() map[string]*model.Package {
 			log.Warnf("impossible to generate signed url for object [%s]. Skipping...\ngot:[%v]", attrs.Name, err)
 		}
 
-		pf := &model.PackageFile{
-			Name:      filepath.Base(attrs.Name),
-			SignedURL: u,
-		}
+		pf := model.NewPackageFile(filepath.Base(attrs.Name), u)
 
 		key := filepath.Dir(attrs.Name)
 		if _, found := pkgs[key]; found {
 			pkgs[key].AppendPackageFile(pf)
 		} else {
-			pkgs[key] = model.New(key, pf)
+			pkgs[key] = model.NewPackage(key, pf)
 		}
 	}
 	return pkgs
