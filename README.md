@@ -28,8 +28,8 @@ go install -o gopypi-gcs cmd/gcs/main.go
 Simple static file server exposing packages locally.
 
 ```bash
-$ ./gopypi-local -help
-Usage of C:\GithubTech\go\src\github.com\MadJlzz\gopypi\gopypi-local:
+$ ./gopypi-file-server -help
+Usage of C:\GithubTech\go\src\github.com\MadJlzz\gopypi\gopypi-file-server:
   -package-location string
         Location from which we should load packages. (default "C:/DefaultStorage")
   -port string
