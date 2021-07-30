@@ -1,25 +1,24 @@
 package main
 
 import (
-	"fmt"
-	"github.com/MadJlzz/gopypi/pkg/listing"
-	"github.com/MadJlzz/gopypi/pkg/storage/disk"
+	"github.com/MadJlzz/gopypi/internal/storage/disk"
 	"go.uber.org/zap"
 	"log"
 )
 
 func main() {
-	logger, err := zap.NewDevelopment()
+	l, err := zap.NewDevelopment()
 	if err != nil {
-		log.Fatalf("can't initialize zap logger: %v", err)
+		log.Fatalf("can't initialize zap l: %v", err)
 	}
-	defer logger.Sync()
+	defer l.Sync()
 
-	sugar := logger.Sugar()
+	// SugaredLogger includes both printf-style APIs.
+	logger := l.Sugar()
 
-	storage := disk.NewStorage(sugar, disk.WithPath("/tmp/local-PyPI"))
-	fmt.Println(storage)
+	storage := disk.NewStorage(logger, disk.WithPath("K:\\test-zone\\gopypi"))
+	logger.Info(storage)
 
-	service := listing.NewService(sugar, storage)
-	fmt.Println(service.GetAllPackages())
+	dist := storage.GetAllPackages()
+	logger.Info(dist)
 }
