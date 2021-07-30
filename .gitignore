@@ -115,3 +115,4 @@ modules.xml
 
 # User custom .gitignore
 credentials/
+bin/
