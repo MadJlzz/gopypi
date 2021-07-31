@@ -23,10 +23,7 @@ func (p Project) Normalize() string {
 	return normalize(string(p))
 }
 
-////type PackageReference string
-//
-//type PackageReference struct {
-//	Name    string
-//	Version string
-//	URI     string
-//}
+type Package struct {
+	Filename string
+	URI      string
+}
