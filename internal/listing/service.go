@@ -1,6 +1,8 @@
 package listing
 
+import "context"
+
 type Repository interface {
 	// GetAllPackages returns all packages saved in storage.
-	GetAllPackages() []Package
+	GetAllPackages(ctx context.Context) []PackageReference
 }
