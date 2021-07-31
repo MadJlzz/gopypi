@@ -74,7 +74,7 @@ func (s Storage) GetAllProjectPackages(ctx context.Context, project string) []li
 		}
 		pkgs = append(pkgs, listing.Package{
 			Filename: path.Base(attrs.Name),
-			URI:      attrs.MediaLink,
+			URI:      fmt.Sprintf("https://storage.cloud.google.com/%s/%s", s.bucket, attrs.Name),
 		})
 	}
 	return pkgs
