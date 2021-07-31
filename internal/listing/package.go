@@ -1,3 +1,3 @@
 package listing
 
-type Package string
+type PackageReference string
