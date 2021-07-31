@@ -27,6 +27,9 @@ func NewRepositoryHandler(logger *zap.SugaredLogger, repository listing.Reposito
 func (rh RepositoryHandler) Router(ctx context.Context) http.Handler {
 	r := mux.NewRouter()
 	r.StrictSlash(true)
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/simple/", http.StatusMovedPermanently)
+	})
 	r.HandleFunc("/simple/", rh.index(ctx))
 	r.HandleFunc("/simple/{project}/", rh.project(ctx))
 	return r
