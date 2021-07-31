@@ -3,9 +3,11 @@ package main
 import (
 	backend "cloud.google.com/go/storage"
 	"context"
+	"github.com/MadJlzz/gopypi/internal/http/rest"
 	"github.com/MadJlzz/gopypi/internal/storage/gcs"
 	"go.uber.org/zap"
 	"log"
+	"net/http"
 )
 
 func main() {
@@ -24,9 +26,13 @@ func main() {
 		logger.Fatalf("impossible to initialize GCS client. got: %v", err)
 	}
 
+	// TODO: use a factory to retrieve the correct storage and be more flexible.
 	storage := gcs.NewStorage(logger, client, "gopypi")
-	logger.Info(storage)
+	logger.Infof("new connection with storage backend [%v]", storage)
 
-	pkgsRef := storage.GetAllPackages(ctx)
-	logger.Info(pkgsRef)
+	// set up HTTP server
+	router := rest.Handler(ctx, storage)
+
+	logger.Info("The PyPi server is live: http://localhost:8080")
+	logger.Fatal(http.ListenAndServe(":8080", router))
 }
