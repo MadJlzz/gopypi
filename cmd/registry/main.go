@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/MadJlzz/gopypi/internal/storage/disk"
 	"go.uber.org/zap"
 	"log"
 )
@@ -15,10 +14,6 @@ func main() {
 
 	// SugaredLogger includes both printf-style APIs.
 	logger := l.Sugar()
+	logger.Info("Will list Google cloud stuff")
 
-	storage := disk.NewStorage(logger, disk.WithPath("K:\\test-zone\\gopypi"))
-	logger.Info(storage)
-
-	dist := storage.GetAllPackages()
-	logger.Info(dist)
 }
