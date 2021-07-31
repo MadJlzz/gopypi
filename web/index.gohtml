@@ -1,0 +1,13 @@
+{{ define "index" -}}
+    <!DOCTYPE html>
+    <html lang="en">
+    <body>
+    <h1>PACKAGE INDEX</h1>
+    {{ range $value := . }}
+        <p>
+            <a href="/simple/{{.}}/">{{.}}</a>
+        </p>
+    {{ end }}
+    </body>
+    </html>
+{{ end }}

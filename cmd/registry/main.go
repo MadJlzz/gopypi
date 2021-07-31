@@ -25,6 +25,7 @@ func main() {
 	if err != nil {
 		logger.Fatalf("impossible to initialize GCS client. got: %v", err)
 	}
+	defer client.Close()
 
 	// TODO: use a factory to retrieve the correct storage and be more flexible.
 	storage := gcs.NewStorage(logger, client, "gopypi")
