@@ -1,7 +1,6 @@
 package view
 
 import (
-	"github.com/MadJlzz/gopypi/internal/utils"
 	"html/template"
 	"io"
 )
@@ -16,11 +15,11 @@ type SimpleRepositoryTemplate struct {
 
 // NewSimpleRepositoryTemplate is the simplest way to get started with a SimpleRepositoryTemplate.
 func NewSimpleRepositoryTemplate() *SimpleRepositoryTemplate {
-	tmpl := template.Must(template.ParseGlob(utils.BasePath() + "/*/*.gohtml"))
+	tmpl := template.Must(template.ParseGlob("web/*.gohtml"))
 	return &SimpleRepositoryTemplate{tmpl: tmpl}
 }
 
-// Execute writes the output of a template into a io.Writer.
+// Execute writes the output of a template into an io.Writer.
 //
 // If an error occurs during execution, it will return an error.
 // Otherwise, this function will return nil.

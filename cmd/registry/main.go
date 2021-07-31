@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	"log"
 	"net/http"
+	"os"
 )
 
 func main() {
@@ -19,6 +20,12 @@ func main() {
 
 	// SugaredLogger includes both printf-style APIs.
 	logger := l.Sugar()
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+		logger.Infof("Defaulting to port %s", port)
+	}
 
 	ctx := context.Background()
 	client, err := backend.NewClient(ctx)
@@ -36,5 +43,7 @@ func main() {
 	router := ph.Router(ctx)
 
 	logger.Info("The PyPi server is live: http://localhost:8080")
-	logger.Fatal(http.ListenAndServe(":8080", router))
+	if err := http.ListenAndServe(":"+port, router); err != nil {
+		logger.Fatal(err)
+	}
 }

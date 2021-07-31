@@ -1,0 +1,6 @@
+runtime: go115
+
+service: gopypi
+main: ./cmd/registry/main.go
+
+service_account: gopypi-sa@madproject-271618.iam.gserviceaccount.com
