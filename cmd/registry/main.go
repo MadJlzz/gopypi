@@ -32,7 +32,8 @@ func main() {
 	logger.Infof("new connection with storage backend [%v]", storage)
 
 	// set up HTTP server
-	router := rest.Handler(ctx, storage)
+	ph := rest.NewRepositoryHandler(logger, storage)
+	router := ph.Router(ctx)
 
 	logger.Info("The PyPi server is live: http://localhost:8080")
 	logger.Fatal(http.ListenAndServe(":8080", router))

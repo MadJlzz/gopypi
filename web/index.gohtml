@@ -2,10 +2,10 @@
     <!DOCTYPE html>
     <html lang="en">
     <body>
-    <h1>PACKAGE INDEX</h1>
+    <h1>GoPypi package index</h1>
     {{ range $value := . }}
         <p>
-            <a href="/simple/{{.}}/">{{.}}</a>
+            <a href="/simple/{{.Normalize}}/">{{.}}</a>
         </p>
     {{ end }}
     </body>
