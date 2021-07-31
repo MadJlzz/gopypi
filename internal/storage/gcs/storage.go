@@ -7,6 +7,7 @@ import (
 	"github.com/MadJlzz/gopypi/internal/listing"
 	"go.uber.org/zap"
 	"google.golang.org/api/iterator"
+	"path"
 	"strings"
 )
 
@@ -51,29 +52,33 @@ func (s Storage) GetAllProjects(ctx context.Context) []listing.Project {
 	return projects
 }
 
-//func (s Storage) GetAllPackages(ctx context.Context) []listing.PackageReference {
-//	bkt := s.client.Bucket(s.bucket)
-//	query := &backend.Query{Prefix: ""}
-//
-//	var pkgsRef []listing.PackageReference
-//	it := bkt.Objects(ctx, query)
-//	for {
-//		attrs, err := it.Next()
-//		if err == iterator.Done {
-//			break
-//		}
-//		if err != nil {
-//			s.logger.Errorf("an error occured while retrieving files from Google Cloud Storage. got: %v", err)
-//		}
-//		parts := strings.SplitN(attrs.Name, "/", 2)
-//		pkgsRef = append(pkgsRef, listing.PackageReference{
-//			Name:    parts[0],
-//			Version: parts[1],
-//			URI:     attrs.MediaLink,
-//		})
-//	}
-//	return pkgsRef
-//}
+func (s Storage) GetAllProjectPackages(ctx context.Context, project string) []listing.Package {
+	bkt := s.client.Bucket(s.bucket)
+	q := &backend.Query{
+		Prefix: project,
+	}
+	err := q.SetAttrSelection([]string{"Name", "MediaLink"})
+	if err != nil {
+		s.logger.Errorf("query attr selection is invalid. got: %v", err)
+	}
+
+	it := bkt.Objects(ctx, q)
+	var pkgs []listing.Package
+	for {
+		attrs, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			s.logger.Errorf("an error occured while retrieving files from Google Cloud Storage. got: %v", err)
+		}
+		pkgs = append(pkgs, listing.Package{
+			Filename: path.Base(attrs.Name),
+			URI:      attrs.MediaLink,
+		})
+	}
+	return pkgs
+}
 
 func (s Storage) String() string {
 	return fmt.Sprintf("GoogleCloudStorage[bucket=%q]", s.bucket)

@@ -1,0 +1,12 @@
+{{ define "project" -}}
+    <!DOCTYPE html>
+    <html lang="en">
+    <body>
+    {{ range $value := . }}
+        <p>
+            <a href="{{ .URI }}">{{ .Filename }}</a>
+        </p>
+    {{ end }}
+    </body>
+    </html>
+{{ end }}
