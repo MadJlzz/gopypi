@@ -25,4 +25,5 @@
 *.out
 
 # User managed exclusions
+.github/
 bin/
