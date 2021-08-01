@@ -1,6 +1,8 @@
 package listing
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"regexp"
 	"strings"
 )
@@ -26,4 +28,15 @@ func (p Project) Normalize() string {
 type Package struct {
 	Filename string
 	URI      string
+}
+
+func (p Package) HexEncodedHash() string {
+	hash := sha256Hash([]byte(p.URI))
+	return hex.EncodeToString(hash)
+}
+
+func sha256Hash(data []byte) []byte {
+	h := sha256.New()
+	h.Write(data)
+	return h.Sum(nil)
 }
