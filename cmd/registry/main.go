@@ -1,7 +1,6 @@
 package main
 
 import (
-	backend "cloud.google.com/go/storage"
 	"context"
 	"github.com/MadJlzz/gopypi/internal/http/rest"
 	"github.com/MadJlzz/gopypi/internal/storage/gcs"
@@ -28,14 +27,9 @@ func main() {
 	}
 
 	ctx := context.Background()
-	client, err := backend.NewClient(ctx)
-	if err != nil {
-		logger.Fatalf("impossible to initialize GCS client. got: %v", err)
-	}
-	defer client.Close()
 
 	// TODO: use a factory to retrieve the correct storage and be more flexible.
-	storage := gcs.NewStorage(logger, client, "gopypi")
+	storage := gcs.NewStorage(ctx, logger, "gopypi")
 	logger.Infof("new connection with storage backend [%v]", storage)
 
 	// set up HTTP server
