@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 	"net/http"
+	"os"
 )
 
 func Handler(logger *zap.SugaredLogger, tpl *view.SimpleRepositoryTemplate, rg registry.Registry) http.Handler {
@@ -17,9 +18,12 @@ func Handler(logger *zap.SugaredLogger, tpl *view.SimpleRepositoryTemplate, rg r
 	router.HandleFunc("/simple/", indexHandler(logger, tpl, rg))
 	router.HandleFunc("/simple/{project}/", projectPackagesHandler(logger, tpl, rg))
 
-
-	authMiddleware := auth.NewAuthenticationMiddleware(logger, &auth.ApiKey{})
-	router.Use(authMiddleware.HandleAuthentication)
+	if _, ok := os.LookupEnv("NODE_ENV"); ok {
+		authMiddleware := auth.NewAuthenticationMiddleware(logger)
+		//router.Use(authMiddleware.HandleCloudIAPAuthentication)
+		router.Use(authMiddleware.HandleBasicAuthentication(&auth.ApiKey{}))
+		router.Use(authMiddleware.HandleNoAuthentication)
+	}
 
 	return router
 }
