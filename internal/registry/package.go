@@ -1,4 +1,4 @@
-package listing
+package registry
 
 import (
 	"crypto/sha256"

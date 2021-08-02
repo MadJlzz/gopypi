@@ -1,43 +1,52 @@
 package main
 
 import (
-	"context"
+	"github.com/MadJlzz/gopypi/configs"
 	"github.com/MadJlzz/gopypi/internal/http/rest"
-	"github.com/MadJlzz/gopypi/internal/storage/gcs"
+	"github.com/MadJlzz/gopypi/internal/registry"
 	"go.uber.org/zap"
 	"log"
 	"net/http"
 	"os"
 )
 
-func main() {
+// initializeLogger generates a new SugaredLogger that includes both printf-style APIs.
+func initializeLogger() *zap.SugaredLogger {
 	l, err := zap.NewDevelopment()
 	if err != nil {
 		log.Fatalf("can't initialize zap l: %v", err)
 	}
-	defer l.Sync()
+	return l.Sugar()
+}
 
-	// SugaredLogger includes both printf-style APIs.
-	logger := l.Sugar()
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-		logger.Infof("Defaulting to port %s", port)
+func configurationFromEnv(storageType configs.StorageType) configs.StorageConfiguration {
+	var c configs.StorageConfiguration
+	switch storageType {
+	case configs.GCS:
+		c = &configs.GCPConfiguration{}
+	case configs.S3:
+		log.Fatalln("gopypi doesn't support S3 storage backend for the moment")
 	}
+	return c
+}
 
-	ctx := context.Background()
+func main() {
+	logger := initializeLogger()
+	defer logger.Sync()
 
-	// TODO: use a factory to retrieve the correct storage and be more flexible.
-	storage := gcs.NewStorage(ctx, logger, "gopypi")
+	configuration := configurationFromEnv(configs.StorageType(os.Getenv("STORAGE_BACKEND")))
+	configuration.LoadConfiguration()
+
+	factory := registry.Factory{Logger: logger, Configuration: configuration}
+	storage := factory.CreateRegistry()
 	logger.Infof("new connection with storage backend [%v]", storage)
 
-	// set up HTTP server
+	// set up HTTP server...
 	ph := rest.NewRepositoryHandler(logger, storage)
-	router := ph.Router(ctx)
+	router := ph.Router()
 
 	logger.Info("The PyPi server is live: http://localhost:8080")
-	if err := http.ListenAndServe(":"+port, router); err != nil {
+	if err := http.ListenAndServe(":8080", router); err != nil {
 		logger.Fatal(err)
 	}
 }
