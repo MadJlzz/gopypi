@@ -83,12 +83,13 @@ func (s GCStorage) GetAllProjectPackages(project string) []Package {
 		if attrs.Name == project+"/" {
 			continue
 		}
-		sUrl, err := GenerateSignedURL(attrs.Name, s.secret, s.configuration.Secret.Name)
+		filename := path.Base(attrs.Name)
+		sUrl, err := GenerateSignedURL(filename, s.secret, s.configuration.Secret.Name)
 		if err != nil {
 			s.logger.Errorf("an error occured while signing file from GCS. got: %v", err)
 		}
 		pkgs = append(pkgs, Package{
-			Filename: path.Base(attrs.Name),
+			Filename: filename,
 			URI:      sUrl,
 		})
 	}
@@ -103,7 +104,7 @@ func GenerateSignedURL(objectReference string, secretCli *secretmanager.Client, 
 	req := &secretmanagerpb.AccessSecretVersionRequest{Name: secret}
 	resp, err := secretCli.AccessSecretVersion(context.TODO(), req)
 	if err != nil {
-		return "", fmt.Errorf("could not retrieve secret to sign URL. got: %v", err)
+		return "", fmt.Errorf("could not retrieve secret[%s] to sign URL. got: %v", secret, err)
 	}
 	conf, err := google.JWTConfigFromJSON(resp.Payload.GetData())
 	if err != nil {

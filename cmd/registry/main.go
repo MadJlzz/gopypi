@@ -15,7 +15,7 @@ import (
 func initializeLogger() *zap.SugaredLogger {
 	l, err := zap.NewDevelopment()
 	if err != nil {
-		log.Fatalf("can't initialize zap l: %v", err)
+		log.Fatalf("can't initialize zap logger: %v", err)
 	}
 	return l.Sugar()
 }

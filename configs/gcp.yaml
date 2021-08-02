@@ -2,4 +2,4 @@ gcs:
   bucket-name: "gopypi"
   secret:
     id: "signing-private-key"
-    name: "projects/${GCP_PROJECT}/secrets/gopypi-sa-private-key/versions/latest"
+    name: "projects/${GOOGLE_CLOUD_PROJECT}/secrets/gopypi-sa-private-key/versions/latest"
