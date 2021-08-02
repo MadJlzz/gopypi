@@ -1,4 +1,4 @@
-package gcs
+package registry
 
 import (
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/MadJlzz/gopypi/configs"
-	"github.com/MadJlzz/gopypi/internal/registry"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/iterator"
@@ -16,14 +15,14 @@ import (
 	"time"
 )
 
-type Storage struct {
+type GCStorage struct {
 	logger *zap.SugaredLogger
 	client *backend.Client
 	secret *secretmanager.Client
 	bucket string
 }
 
-func NewStorage(logger *zap.SugaredLogger, configuration configs.StorageConfiguration) *Storage {
+func NewGCStorage(logger *zap.SugaredLogger, configuration configs.StorageConfiguration) *GCStorage {
 	ctx := context.TODO()
 	t, _ := configuration.(*configs.GCPConfiguration)
 
@@ -35,7 +34,7 @@ func NewStorage(logger *zap.SugaredLogger, configuration configs.StorageConfigur
 	if err != nil {
 		logger.Fatalf("impossible to initialize SecretManager client. got: %v", err)
 	}
-	return &Storage{
+	return &GCStorage{
 		logger: logger,
 		client: client,
 		secret: secret,
@@ -43,7 +42,7 @@ func NewStorage(logger *zap.SugaredLogger, configuration configs.StorageConfigur
 	}
 }
 
-func (s Storage) GetAllProjects() []registry.Project {
+func (s GCStorage) GetAllProjects() []Project {
 	bkt := s.client.Bucket(s.bucket)
 	q := &backend.Query{
 		Prefix:    "",
@@ -55,22 +54,22 @@ func (s Storage) GetAllProjects() []registry.Project {
 	}
 
 	it := bkt.Objects(context.TODO(), q)
-	var projects []registry.Project
+	var projects []Project
 	for {
 		attrs, err := it.Next()
 		if err == iterator.Done {
 			break
 		}
 		if err != nil {
-			s.logger.Errorf("an error occured while retrieving files from Google Cloud Storage. got: %v", err)
+			s.logger.Errorf("an error occured while retrieving files from Google Cloud GCStorage. got: %v", err)
 		}
 		project := strings.Trim(attrs.Prefix, "/")
-		projects = append(projects, registry.Project(project))
+		projects = append(projects, Project(project))
 	}
 	return projects
 }
 
-func (s Storage) GetAllProjectPackages(project string) []registry.Package {
+func (s GCStorage) GetAllProjectPackages(project string) []Package {
 	ctx := context.TODO()
 
 	bkt := s.client.Bucket(s.bucket)
@@ -83,19 +82,19 @@ func (s Storage) GetAllProjectPackages(project string) []registry.Package {
 	}
 
 	it := bkt.Objects(ctx, q)
-	var pkgs []registry.Package
+	var pkgs []Package
 	for {
 		attrs, err := it.Next()
 		if err == iterator.Done {
 			break
 		}
 		if err != nil {
-			s.logger.Errorf("an error occured while retrieving files from Google Cloud Storage. got: %v", err)
+			s.logger.Errorf("an error occured while retrieving files from Google Cloud GCStorage. got: %v", err)
 		}
 		if attrs.Name == project+"/" {
 			continue
 		}
-		pkgs = append(pkgs, registry.Package{
+		pkgs = append(pkgs, Package{
 			Filename: path.Base(attrs.Name),
 			URI:      s.generateSignedURL(ctx, attrs.Name),
 			//URI:      fmt.Sprintf("https://storage.cloud.google.com/%s/%s", s.bucket, attrs.Name),
@@ -104,11 +103,11 @@ func (s Storage) GetAllProjectPackages(project string) []registry.Package {
 	return pkgs
 }
 
-func (s Storage) String() string {
+func (s GCStorage) String() string {
 	return fmt.Sprintf("GoogleCloudStorage[bucket=%q]", s.bucket)
 }
 
-func (s Storage) generateSignedURL(ctx context.Context, name string) string {
+func (s GCStorage) generateSignedURL(ctx context.Context, name string) string {
 	req := &secretmanagerpb.AccessSecretVersionRequest{
 		Name: "projects/561924096032/secrets/gopypi-sa-private-key/versions/latest",
 	}
