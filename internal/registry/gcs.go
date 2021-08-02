@@ -2,7 +2,7 @@ package registry
 
 import (
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
-	backend "cloud.google.com/go/storage"
+	"cloud.google.com/go/storage"
 	"context"
 	"fmt"
 	"github.com/MadJlzz/gopypi/configs"
@@ -16,35 +16,24 @@ import (
 )
 
 type GCStorage struct {
-	logger *zap.SugaredLogger
-	client *backend.Client
-	secret *secretmanager.Client
-	bucket string
+	logger        *zap.SugaredLogger
+	storage       *storage.Client
+	secret        *secretmanager.Client
+	configuration configs.GCSConfiguration
 }
 
-func NewGCStorage(logger *zap.SugaredLogger, configuration configs.StorageConfiguration) *GCStorage {
-	ctx := context.TODO()
-	t, _ := configuration.(*configs.GCPConfiguration)
-
-	client, err := backend.NewClient(ctx)
-	if err != nil {
-		logger.Fatalf("impossible to initialize GCS client. got: %v", err)
-	}
-	secret, err := secretmanager.NewClient(ctx)
-	if err != nil {
-		logger.Fatalf("impossible to initialize SecretManager client. got: %v", err)
-	}
+func NewGCStorage(logger *zap.SugaredLogger, storageCli *storage.Client, secretCli *secretmanager.Client, configuration configs.GCSConfiguration) *GCStorage {
 	return &GCStorage{
-		logger: logger,
-		client: client,
-		secret: secret,
-		bucket: t.GCS.BucketName,
+		logger:        logger,
+		storage:       storageCli,
+		secret:        secretCli,
+		configuration: configuration,
 	}
 }
 
 func (s GCStorage) GetAllProjects() []Project {
-	bkt := s.client.Bucket(s.bucket)
-	q := &backend.Query{
+	bkt := s.storage.Bucket(s.configuration.BucketName)
+	q := &storage.Query{
 		Prefix:    "",
 		Delimiter: "/",
 	}
@@ -72,8 +61,8 @@ func (s GCStorage) GetAllProjects() []Project {
 func (s GCStorage) GetAllProjectPackages(project string) []Package {
 	ctx := context.TODO()
 
-	bkt := s.client.Bucket(s.bucket)
-	q := &backend.Query{
+	bkt := s.storage.Bucket(s.configuration.BucketName)
+	q := &storage.Query{
 		Prefix: project,
 	}
 	err := q.SetAttrSelection([]string{"Name"})
@@ -94,42 +83,42 @@ func (s GCStorage) GetAllProjectPackages(project string) []Package {
 		if attrs.Name == project+"/" {
 			continue
 		}
+		sUrl, err := GenerateSignedURL(attrs.Name, s.secret, s.configuration.Secret.Name)
+		if err != nil {
+			s.logger.Errorf("an error occured while signing file from GCS. got: %v", err)
+		}
 		pkgs = append(pkgs, Package{
 			Filename: path.Base(attrs.Name),
-			URI:      s.generateSignedURL(ctx, attrs.Name),
-			//URI:      fmt.Sprintf("https://storage.cloud.google.com/%s/%s", s.bucket, attrs.Name),
+			URI:      sUrl,
 		})
 	}
 	return pkgs
 }
 
 func (s GCStorage) String() string {
-	return fmt.Sprintf("GoogleCloudStorage[bucket=%q]", s.bucket)
+	return fmt.Sprintf("GoogleCloudStorage[bucket=%s, signingSecret=%s]", s.configuration.BucketName, s.configuration.Secret.Name)
 }
 
-func (s GCStorage) generateSignedURL(ctx context.Context, name string) string {
-	req := &secretmanagerpb.AccessSecretVersionRequest{
-		Name: "projects/561924096032/secrets/gopypi-sa-private-key/versions/latest",
-	}
-	resp, err := s.secret.AccessSecretVersion(ctx, req)
+func GenerateSignedURL(objectReference string, secretCli *secretmanager.Client, secret string) (string, error) {
+	req := &secretmanagerpb.AccessSecretVersionRequest{Name: secret}
+	resp, err := secretCli.AccessSecretVersion(context.TODO(), req)
 	if err != nil {
-		s.logger.Errorf("could not retrieve secret to sign URL. got: %v", err)
+		return "", fmt.Errorf("could not retrieve secret to sign URL. got: %v", err)
 	}
 	conf, err := google.JWTConfigFromJSON(resp.Payload.GetData())
 	if err != nil {
-		s.logger.Errorf("could not prepare JWT config file. got: %v", err)
+		return "", fmt.Errorf("could not load JWT configuration file from secret. got: %v", err)
 	}
-
-	opts := &backend.SignedURLOptions{
-		Scheme:         backend.SigningSchemeV4,
+	opts := &storage.SignedURLOptions{
+		Scheme:         storage.SigningSchemeV4,
 		Method:         "GET",
 		GoogleAccessID: conf.Email,
 		PrivateKey:     conf.PrivateKey,
-		Expires:        time.Now().Add(15 * time.Minute),
+		Expires:        time.Now().Add(1 * time.Minute),
 	}
-	u, err := backend.SignedURL(s.bucket, name, opts)
+	sUrl, err := storage.SignedURL(objectReference, secret, opts)
 	if err != nil {
-		s.logger.Errorf("could not sign URL. got: %v", err)
+		return "", fmt.Errorf("could not sign storage URL. got: %v", err)
 	}
-	return u
+	return sUrl, nil
 }

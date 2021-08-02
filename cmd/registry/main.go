@@ -34,8 +34,6 @@ func configurationFromEnv(storageType configs.StorageType) configs.StorageConfig
 	return c
 }
 
-
-
 func main() {
 	logger := initializeLogger()
 	defer logger.Sync()
@@ -43,7 +41,7 @@ func main() {
 	configuration := configurationFromEnv(configs.StorageType(os.Getenv("STORAGE_BACKEND")))
 	configuration.LoadConfiguration()
 
-	factory := registry.Factory{Logger: logger, Configuration: configuration}
+	factory := registry.GetFactory(logger, configuration)
 	rg := factory.CreateRegistry()
 	logger.Infof("new connection with storage backend [%v]", rg)
 
