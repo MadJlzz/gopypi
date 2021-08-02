@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"github.com/MadJlzz/gopypi/internal/auth"
 	"github.com/MadJlzz/gopypi/internal/registry"
 	"github.com/MadJlzz/gopypi/internal/view"
 	"github.com/gorilla/mux"
@@ -15,6 +16,10 @@ func Handler(logger *zap.SugaredLogger, tpl *view.SimpleRepositoryTemplate, rg r
 	router.HandleFunc("/", redirectHandler())
 	router.HandleFunc("/simple/", indexHandler(logger, tpl, rg))
 	router.HandleFunc("/simple/{project}/", projectPackagesHandler(logger, tpl, rg))
+
+
+	authMiddleware := auth.NewAuthenticationMiddleware(logger, &auth.ApiKey{})
+	router.Use(authMiddleware.HandleAuthentication)
 
 	return router
 }
