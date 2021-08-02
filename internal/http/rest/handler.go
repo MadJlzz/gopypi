@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"fmt"
 	"github.com/MadJlzz/gopypi/internal/registry"
 	"github.com/MadJlzz/gopypi/internal/view"
 	"github.com/gorilla/mux"
@@ -9,48 +8,40 @@ import (
 	"net/http"
 )
 
-type RepositoryHandler struct {
-	logger   *zap.SugaredLogger
-	template *view.SimpleRepositoryTemplate
-	registry registry.Registry
+func Handler(logger *zap.SugaredLogger, tpl *view.SimpleRepositoryTemplate, rg registry.Registry) http.Handler {
+	router := mux.NewRouter()
+	router.StrictSlash(true)
+
+	router.HandleFunc("/", redirectHandler())
+	router.HandleFunc("/simple/", indexHandler(logger, tpl, rg))
+	router.HandleFunc("/simple/{project}/", projectPackagesHandler(logger, tpl, rg))
+
+	return router
 }
 
-func NewRepositoryHandler(logger *zap.SugaredLogger, repository registry.Registry) *RepositoryHandler {
-	return &RepositoryHandler{
-		logger:   logger,
-		template: view.NewSimpleRepositoryTemplate(),
-		registry: repository,
+func redirectHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/simple/", http.StatusMovedPermanently)
 	}
 }
 
-func (rh RepositoryHandler) Router() http.Handler {
-	r := mux.NewRouter()
-	r.StrictSlash(true)
-	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/simple/", http.StatusMovedPermanently)
-	})
-	r.HandleFunc("/simple/", rh.index())
-	r.HandleFunc("/simple/{project}/", rh.project())
-	return r
-}
-
-func (rh RepositoryHandler) index() http.HandlerFunc {
+func indexHandler(logger *zap.SugaredLogger, tpl *view.SimpleRepositoryTemplate, rg registry.Registry) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		projects := rh.registry.GetAllProjects()
-		if err := rh.template.Execute(w, "index", projects); err != nil {
-			_ = fmt.Errorf("could not execute template [index]. [%v]\n", err)
-			//Some fancy HTTP error code that is user friendly
+		projects := rg.GetAllProjects()
+		if err := tpl.Execute(w, "index", projects); err != nil {
+			logger.Errorf("could not execute template [index]. got: %v", err)
+			http.Error(w, "the 'index' page could not be generated", http.StatusInternalServerError)
 		}
 	}
 }
 
-func (rh RepositoryHandler) project() http.HandlerFunc {
+func projectPackagesHandler(logger *zap.SugaredLogger, tpl *view.SimpleRepositoryTemplate, rg registry.Registry) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		projects := rh.registry.GetAllProjectPackages(vars["project"])
-		if err := rh.template.Execute(w, "project", projects); err != nil {
-			_ = fmt.Errorf("could not execute template [project]. [%v]\n", err)
-			//Some fancy HTTP error code that is user friendly
+		projects := rg.GetAllProjectPackages(vars["project"])
+		if err := tpl.Execute(w, "project-packages", projects); err != nil {
+			logger.Errorf("could not execute template [project-packages]. got: %v", err)
+			http.Error(w, "the 'project-packages' page could not be generated", http.StatusInternalServerError)
 		}
 	}
 }
