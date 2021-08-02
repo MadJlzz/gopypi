@@ -83,13 +83,12 @@ func (s GCStorage) GetAllProjectPackages(project string) []Package {
 		if attrs.Name == project+"/" {
 			continue
 		}
-		filename := path.Base(attrs.Name)
-		sUrl, err := GenerateSignedURL(filename, s.secret, s.configuration.Secret.Name)
+		sUrl, err := GenerateSignedURL(s.configuration.BucketName, attrs.Name, s.secret, s.configuration.Secret.Name)
 		if err != nil {
 			s.logger.Errorf("an error occured while signing file from GCS. got: %v", err)
 		}
 		pkgs = append(pkgs, Package{
-			Filename: filename,
+			Filename: path.Base(attrs.Name),
 			URI:      sUrl,
 		})
 	}
@@ -100,7 +99,7 @@ func (s GCStorage) String() string {
 	return fmt.Sprintf("GoogleCloudStorage[bucket=%s, signingSecret=%s]", s.configuration.BucketName, s.configuration.Secret.Name)
 }
 
-func GenerateSignedURL(objectReference string, secretCli *secretmanager.Client, secret string) (string, error) {
+func GenerateSignedURL(bucket string, objectReference string, secretCli *secretmanager.Client, secret string) (string, error) {
 	req := &secretmanagerpb.AccessSecretVersionRequest{Name: secret}
 	resp, err := secretCli.AccessSecretVersion(context.TODO(), req)
 	if err != nil {
@@ -117,7 +116,7 @@ func GenerateSignedURL(objectReference string, secretCli *secretmanager.Client, 
 		PrivateKey:     conf.PrivateKey,
 		Expires:        time.Now().Add(1 * time.Minute),
 	}
-	sUrl, err := storage.SignedURL(objectReference, secret, opts)
+	sUrl, err := storage.SignedURL(bucket, objectReference, opts)
 	if err != nil {
 		return "", fmt.Errorf("could not sign storage URL. got: %v", err)
 	}
