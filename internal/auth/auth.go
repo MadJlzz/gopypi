@@ -1,13 +1,13 @@
 package auth
 
-type Authentifier interface {
-	authenticate(user, password string) error
+type Authenticator interface {
+	authenticate() bool
 }
 
 type ApiKey struct {
-
+	Key string
 }
 
-func (ak *ApiKey) authenticate(user, password string) error {
-	return nil
+func (ak *ApiKey) authenticate() bool {
+	return true
 }
