@@ -26,6 +26,8 @@ func configurationFromEnv(storageType configs.StorageType) configs.StorageConfig
 		c = &configs.GCPConfiguration{}
 	case configs.S3:
 		log.Fatalln("gopypi doesn't support S3 storage backend for the moment")
+	default:
+		log.Fatalf("could not load configuration for storage type: '%s'", storageType)
 	}
 	return c
 }
