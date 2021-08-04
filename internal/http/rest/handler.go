@@ -7,7 +7,6 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 	"net/http"
-	"os"
 )
 
 func Handler(logger *zap.SugaredLogger, tpl *view.SimpleRepositoryTemplate, rg registry.Registry) http.Handler {
@@ -18,12 +17,8 @@ func Handler(logger *zap.SugaredLogger, tpl *view.SimpleRepositoryTemplate, rg r
 	router.HandleFunc("/simple/", indexHandler(logger, tpl, rg))
 	router.HandleFunc("/simple/{project}/", projectPackagesHandler(logger, tpl, rg))
 
-	if _, ok := os.LookupEnv("NODE_ENV"); ok {
-		authMiddleware := auth.NewAuthenticationMiddleware(logger)
-		//router.Use(authMiddleware.HandleCloudIAPAuthentication)
-		router.Use(authMiddleware.HandleBasicAuthentication(&auth.ApiKey{}))
-		router.Use(authMiddleware.HandleNoAuthentication)
-	}
+	authMiddleware := auth.NewAuthenticationMiddleware(logger)
+	router.Use(authMiddleware.HandleBasicAuthentication)
 
 	return router
 }
@@ -46,8 +41,7 @@ func indexHandler(logger *zap.SugaredLogger, tpl *view.SimpleRepositoryTemplate,
 
 func projectPackagesHandler(logger *zap.SugaredLogger, tpl *view.SimpleRepositoryTemplate, rg registry.Registry) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		projects := rg.GetAllProjectPackages(vars["project"])
+		projects := rg.GetAllProjectPackages()
 		if err := tpl.Execute(w, "project-packages", projects); err != nil {
 			logger.Errorf("could not execute template [project-packages]. got: %v", err)
 			http.Error(w, "the 'project-packages' page could not be generated", http.StatusInternalServerError)

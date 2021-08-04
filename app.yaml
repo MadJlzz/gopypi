@@ -4,7 +4,7 @@ service: gopypi
 main: ./cmd/registry/main.go
 
 env_variables:
-  NODE_ENV: "production"
+  API_KEY: # Put you API key here
   STORAGE_BACKEND: "GCS"
 
 service_account: gopypi-sa@madproject-271618.iam.gserviceaccount.com

@@ -34,7 +34,6 @@ func NewGCStorage(logger *zap.SugaredLogger, storageCli *storage.Client, secretC
 func (s GCStorage) GetAllProjects() []Project {
 	bkt := s.storage.Bucket(s.configuration.BucketName)
 	q := &storage.Query{
-		Prefix:    "",
 		Delimiter: "/",
 	}
 	err := q.SetAttrSelection([]string{"Name"})
@@ -58,13 +57,11 @@ func (s GCStorage) GetAllProjects() []Project {
 	return projects
 }
 
-func (s GCStorage) GetAllProjectPackages(project string) []Package {
+func (s GCStorage) GetAllProjectPackages() []Package {
 	ctx := context.TODO()
-
 	bkt := s.storage.Bucket(s.configuration.BucketName)
-	q := &storage.Query{
-		Prefix: project,
-	}
+
+	q := &storage.Query{}
 	err := q.SetAttrSelection([]string{"Name"})
 	if err != nil {
 		s.logger.Errorf("query attr selection is invalid. got: %v", err)
@@ -80,7 +77,8 @@ func (s GCStorage) GetAllProjectPackages(project string) []Package {
 		if err != nil {
 			s.logger.Errorf("an error occured while retrieving files from Google Cloud GCStorage. got: %v", err)
 		}
-		if attrs.Name == project+"/" {
+		if strings.HasSuffix(attrs.Name, "/") {
+			s.logger.Infof("reference file[%s] represents a directory. skipping...", attrs.Name)
 			continue
 		}
 		sUrl, err := GenerateSignedURL(s.configuration.BucketName, attrs.Name, s.secret, s.configuration.Secret.Name)

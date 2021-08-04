@@ -5,5 +5,5 @@ type Registry interface {
 	GetAllProjects() []Project
 
 	// GetAllProjectPackages returns all packages saved in storage.
-	GetAllProjectPackages(project string) []Package
+	GetAllProjectPackages() []Package
 }

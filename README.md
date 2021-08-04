@@ -3,55 +3,77 @@
 
 # gopypi
 
-gopypi is an implementation of the [PEP 503](https://www.python.org/dev/peps/pep-0503/) also known
+gopypi is partial implementation of the [PEP 503](https://www.python.org/dev/peps/pep-0503/) also known
 as the `Simple Repository API`.
 
-Everybody knows the `PyPi` ([The Python Package Index](https://pypi.org/)) and since I needed to store **private packages**,
-I decided to make my own implementation with Golang.
+Everybody knows `PyPi` ([The Python Package Index](https://pypi.org/)) when it comes to retrieve Python dependencies
+and since I needed to store **private packages**, I decided to make my own implementation with Golang.
 
 ## Installation
 
-As usual with go, just use the Good Ol' Classic:
-```bash
-go get github.com/MadJlzz/gopypi
+### Google Cloud Platform
+
+#### App Engine
+
+At the moment, `gopypi` has been tested and deployed only within Google App Engine. It is handy as it comes
+with several features like autoscaling or even TLS termination.
+
+To deploy `gopypi` in App Engine, just update the `app.yaml` with the correct
+`API_KEY` that you've generated. You can use this snippet to generate easily a token:
+
+```go
+package main
+
+import (
+	"crypto/rand"
+	"encoding/base64"
+	"fmt"
+)
+
+func main() {
+	// Pure bytes generated key.
+	b := make([]byte, 32)
+	_, _ = rand.Read(b)
+	fmt.Printf("%x\n", b)
+	// If you prefer the base64 encoded version.
+	s := base64.StdEncoding.EncodeToString(b)
+	fmt.Printf("%s", s)
+}
 ```
 
-Now simply install it: 
+Once you've update the `API_KEY` environment variable, use `gcloud` to deploy:
 ```bash
-go install -o gopypi-gcs cmd/gcs/main.go
+gcloud app deploy app.yaml
 ```
 
-## Usage
+#### Secret Manager
 
-### Localhost backend
+`gopypi` needs a private key to sign URLs of packages stored in GCS to let `pip` download them.
 
-Simple static file server exposing packages locally.
+To let the app retrieve this private key, you will need to create it first from the `service account` that runs
+the AppEngine service.
 
-```bash
-$ ./gopypi-file-server -help
-Usage of C:\GithubTech\go\src\github.com\MadJlzz\gopypi\gopypi-file-server:
-  -package-location string
-        Location from which we should load packages. (default "C:/DefaultStorage")
-  -port string
-        Port of the app (default "3000")
-```
+Then, go to the `secret manager` and create a new key called `gopypi-sa-private-key`. Store the JSON service account file
+there.
 
-### Google Cloud Storage 
+Don't forget to add a permission for the service account that runs `gopypi` to be able to retrieve secrets.
+(`secretmanager.secrets.get`: Secret Manager Viewer `roles/secretmanager.viewer`)
 
-PyPi server implementation backed by Google Cloud Storage.
+You can change the name of the secret to use by changing the secret name of the `configs/gcp.yaml` file.
 
-You should provide credentials with `storage.buckets.get` permission in order to access bucket
-and generate signed urls.
-(see [service accounts](https://cloud.google.com/iam/docs/service-accounts) for more details)
+#### Cloud Storage 
 
-```bash
-$ ./gopypi-gcs -help
-Usage of C:\GithubTech\go\src\github.com\MadJlzz\gopypi\gopypi-gcs:
-  -credentials string
-        GCP JSON credentials file. (default "credentials/service-account-dev.json")
-  -port string
-        Port of the app (default "3000")
-```
+`gopypi` leverages GCS to store and serve packages.
+
+Create a bucket with the name `gopypi` or the one of you choice. (check `configs/gcp.yaml` and update the bucket value!)
+
+Like for retrieving the secrets, the `service account` running `gopypi` will need permissions.
+Go to the newly create bucket and add `storage.buckets.get` for the `sa`.
+
+That's it you should be good to go!
+
+You can choose the directory structure of your choice for packages as long as you keep the root
+with packages name. (e.g. `pydantic/...` or `pydantic/1.8.2/...`)
 
 ### Download a package
 
@@ -63,21 +85,10 @@ pip install --extra-index-url https://<gopypi server>/simple/ <private_package>
 :warning: **If you're package has the same name with one in pypi.org**: Order your
 indexes in a pip configuration file to search first in your private registry. 
 
-## Next steps
-
-OAuth 2.0 is not yet implemented. For the moment, only `service account`
-authentication is possible.
-
-:exclamation: For the moment, `gopypi` is serving only `HTTP`. It means 
-that a man in the middle can intercept your private libraries. 
-
-:information_source: If you deploy the web server with e.g. App Engine
-deploying with HTTP is fine because Google manage the HTTP(s) exposition
-for you.
 
 ## Contributing
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change. 
+Pull requests are always welcome. Don't hesitate to open an issue for questions or changes. 
 
 ## License
 
