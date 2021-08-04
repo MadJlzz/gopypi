@@ -11,7 +11,7 @@ type StorageType string
 
 const (
 	GCS StorageType = "GCS"
-	S3 = "S3"
+	S3              = "S3"
 )
 
 type StorageConfiguration interface {
