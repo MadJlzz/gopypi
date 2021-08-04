@@ -81,7 +81,7 @@ e.g. `pydantic/...` or `pydantic/1.8.2/...`)
 Just use `pip` as you'd expect to:
 
 ```bash
-pip install --extra-index-url https://<gopypi server>/simple/ <private_package>
+pip install --extra-index-url https://<generated_token>:<gopypi server>/simple/ <private_package>
 ```
 
 :warning: **If you're package has the same name with one in pypi.org**: Order your indexes in a pip configuration file
