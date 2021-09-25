@@ -9,6 +9,10 @@ the `Simple Repository API`.
 Everybody knows `PyPi` ([The Python Package Index](https://pypi.org/)) when it comes to retrieve Python dependencies and
 since I needed to store **private packages**, I decided to make my own implementation with Golang.
 
+# Why has this repository been archived?
+
+This repository was first introduced because GCP was missing a place to store Python package. They added this functionnality recently (https://cloud.google.com/artifact-registry/docs/python/quickstart) and I don't think `gopypi` has still a meaning atm. (also the fact that it supports only GCS as a backend...)
+
 ## Installation
 
 ### Google Cloud Platform
